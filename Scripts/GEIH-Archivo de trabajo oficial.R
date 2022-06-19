@@ -2,21 +2,25 @@
 # Andrea Beleño - 200620739
 #Con este script se realizará el scraping de las bases de datos que serán usada 
 #para el desarrollo del Problem Set, específicamente puntos 1 y 2.
-library(pacman)
-p_load(rio)
-p_load(tidyverse)
-p_load(e1071)
-p_load(EnvStats)
-p_load(tidymodels)
-p_load(ggplot2)
-p_load(scales)
-p_load(ggpubr)
-p_load(knitr)
-p_load(kableExtra)
-p_load(foreing)
-p_load(skimr)
-p_load(rvest)
-p_load(caret)
+install.packages("pacman") #Instalar librería si no cuenta con esta 
+library(pacman) #Llamar librería
+p_load(rio, #Instalar librerías que falten
+       tidyverse,
+       e1071,
+       EnvStats,
+       tidymodels,
+       ggplot2,
+       scales,
+       ggpubr,
+       knitr,
+       kableExtra,
+       foreing,
+       skimr,
+       rvest,
+       caret,
+       stringr,
+       stargazer,
+       recipes)
 #BASE DE DATOS GEIH
 #Se importará la base de datos cada base de datos y se volverá data.frame para poder tenerlo en matriz.
 Base1 <- read_html("https://ignaciomsarmiento.github.io/GEIH2018_sample/pages/geih_page_1.html")%>%
@@ -52,21 +56,61 @@ Base10<- data.frame(Base10)
 #Al observar que cada una de las bases de datos si pudo ser importada, se procede a unir cada base de datos
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
+
+DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
+#con edad mayor o igual a 18 años
+
 #Ahora, procederemos a realizar la clasificación de variables.
-DGEIH<-subset(DatosGEIH, select = c( directorio,ingtot, pet, mes, age, sex,ocu) )
-View(DGEIH)
-exp <- floor(c(DatosGEIH$p6426/12))
+exp <- floor(c(DatosGEIH_18$p6426/12)) #Se anualiza la variable relacionada con la experiencia
 view(exp)
-educ <- DatosGEIH$p6210
+educ <- DatosGEIH_18$p6210 #Se asigna la variable educación
 View(educ)
-OfGEIH <- cbind(DGEIH, exp, educ)
-View(OfGEIH)
+DGEIH<-subset(DatosGEIH_18, select = c( "directorio","ingtot", "pet", "mes", "age", "sex","ocu") ) #Hacer un subset con las variables a usar
+DGEIH<-cbind(DGEIH, exp, educ) #Incluir las variables calculadas
+View(DGEIH)
+nrow(DGEIH)
+ncol(DGEIH)
+dim(DGEIH)
+head(DGEIH)
+tail(DGEIH)
+
+summary(DGEIH)
+
+DGEIH <- DGEIH %>% #Se vuelven categóricas las variables que así lo sean en la BD
+  mutate_at(.vars = c(
+    "directorio", "pet","sex", "ocu", "educ"),
+    .funs = factor)
+
+cantidad_na <- sapply(DGEIH, function(x) sum(is.na(x)))
+cantidad_na <- data.frame(cantidad_na)
+porcentaje_na <- cantidad_na/nrow(DGEIH)
+
+# Porcentaje de observaciones faltantes. 
+p <- mean(porcentaje_na[,1])
+print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
+
+
+#DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA (Ver documento para explicación)
+#DGEIH<-DGEIH[DGEIH$exp=="NA",] #En caso que se proceda a retirar las observaciones 
+#con falta de información
+
+
+
+#Ahora, procederemos a realizar la clasificación de variables.
+#DGEIH<-subset(DatosGEIH, select = c( directorio,ingtot, pet, mes, age, sex,ocu) )
+#View(DGEIH)
+#exp <- floor(c(DatosGEIH$p6426/12))
+#view(exp)
+#educ <- DatosGEIH$p6210
+#View(educ)
+#OfGEIH <- cbind(DGEIH, exp, educ)
+#View(OfGEIH)
 #La base de datos completa se llamará OfGEIH
-view(OfGEIH)
-nrow(OfGEIH)
-ncol(OfGEIH)
-dim(OfGEIH)
-head(OfGEIH)
-tail(OfGEIH)
+#view(OfGEIH)
+#nrow(OfGEIH)
+#ncol(OfGEIH)
+#dim(OfGEIH)
+#head(OfGEIH)
+#tail(OfGEIH)
 
 
