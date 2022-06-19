@@ -106,11 +106,32 @@ print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vací
 #OfGEIH <- cbind(DGEIH, exp, educ)
 #View(OfGEIH)
 #La base de datos completa se llamará OfGEIH
+##
 #view(OfGEIH)
 #nrow(OfGEIH)
 #ncol(OfGEIH)
 #dim(OfGEIH)
 #head(OfGEIH)
 #tail(OfGEIH)
+##
+view(OfGEIH)
+nrow(OfGEIH)
+ncol(OfGEIH)
+dim(OfGEIH)
+head(OfGEIH)
+tail(OfGEIH)
+#PUNTO 1.3.1
+#Voy a analizar la variable que describe el ingreso
+#Primero decido analizar el ingreso total, ingreso total imputado y el observado.
+View(subset(DatosGEIH, select = c(ingtot, ingtotes, ingtotob)))
+#Por lo tanto, el ingreso total sería la suma del ingreso observado y el imputado.
+#Sin embargo, es pertinente analizar las demás variables que pueden componer el ingreso, siendo estos, los ingresos por intereses, por ayudas, monetarios, arriendos, especie y monetarios: 
+View(subset(DatosGEIH, select = c(ingtot, iof1 , iof1es, iof2, iof2es, iof3h, iof3hes, iof6, iof6es, isa, isaes, ie, iees, imdies , impa, impaes)))
+#Al observar que efectivamente algunas de estas variables de ingreso suman en algunas observaciones el ingreso total (ingtot), se asume que efectivamente, la variable que describe todo el ingreso.
+#Ahora, se comparará con las primas
+View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_primaServicios_m, y_primaNavidad_m	, y_subEducativo_m , y_subFamiliar_m)))
+#Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
+#De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
+
 
 
