@@ -14,14 +14,15 @@ p_load(rio, #Instalar librerías que falten
        ggpubr,
        knitr,
        kableExtra,
-       foreing,
+       foreign,
        skimr,
        rvest,
        caret,
        stringr,
        stargazer,
        recipes)
-#BASE DE DATOS GEIH
+
+#####BASE DE DATOS GEIH Punto 1.1.1
 #Se importará la base de datos cada base de datos y se volverá data.frame para poder tenerlo en matriz.
 Base1 <- read_html("https://ignaciomsarmiento.github.io/GEIH2018_sample/pages/geih_page_1.html")%>%
   html_table()
@@ -57,6 +58,7 @@ Base10<- data.frame(Base10)
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
 
+#####Punto 1.2
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
 #con edad mayor o igual a 18 años
 
@@ -67,14 +69,8 @@ educ <- DatosGEIH_18$p6210 #Se asigna la variable educación
 View(educ)
 DGEIH<-subset(DatosGEIH_18, select = c( "directorio","ingtot", "pet", "mes", "age", "sex","ocu") ) #Hacer un subset con las variables a usar
 DGEIH<-cbind(DGEIH, exp, educ) #Incluir las variables calculadas
-View(DGEIH)
-nrow(DGEIH)
-ncol(DGEIH)
-dim(DGEIH)
-head(DGEIH)
-tail(DGEIH)
 
-summary(DGEIH)
+#####Punto 1.2.2
 
 DGEIH <- DGEIH %>% #Se vuelven categóricas las variables que así lo sean en la BD
   mutate_at(.vars = c(
@@ -93,6 +89,18 @@ print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vací
 #DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA (Ver documento para explicación)
 #DGEIH<-DGEIH[DGEIH$exp=="NA",] #En caso que se proceda a retirar las observaciones 
 #con falta de información
+
+#####Punto 1.2.3
+
+View(DGEIH)
+nrow(DGEIH)
+ncol(DGEIH)
+dim(DGEIH)
+head(DGEIH)
+tail(DGEIH)
+
+summary(DGEIH)
+#Se realiza el análisis descriptivo de las variables a tener en cuenta
 
 
 
@@ -121,7 +129,7 @@ print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vací
 #head(OfGEIH)
 #tail(OfGEIH)
 
-#PUNTO 1.3.1
+#####PUNTO 1.3.1
 #Se va a analizar la variable que describe el ingreso
 #Primero decido analizar el ingreso total, ingreso total imputado y el observado.
 View(subset(DatosGEIH, select = c(ingtot, ingtotes, ingtotob)))
