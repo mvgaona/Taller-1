@@ -57,7 +57,9 @@ Base10<- data.frame(Base10)
 #Al observar que cada una de las bases de datos si pudo ser importada, se procede a unir cada base de datos
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
+saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
 
+#trabajo de Rstudio
 #####Punto 1.2
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
 #con edad mayor o igual a 18 años
@@ -77,18 +79,17 @@ DGEIH <- DGEIH %>% #Se vuelven categóricas las variables que así lo sean en la
     "directorio", "pet","sex", "ocu", "educ"),
     .funs = factor)
 
+summary(DGEIH) #Se hace una inspección general de esta base de datos
+
 cantidad_na <- sapply(DGEIH, function(x) sum(is.na(x)))
 cantidad_na <- data.frame(cantidad_na)
 porcentaje_na <- cantidad_na/nrow(DGEIH)
+porcentaje_na <-porcentaje_na*100
+porcentaje_na #Visualizo el porcentaje de los datos que tienen NA
 
-# Porcentaje de observaciones faltantes. 
-p <- mean(porcentaje_na[,1])
-print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vacías"))
+DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA (Ver documento para explicación)
 
-
-#DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA (Ver documento para explicación)
-#DGEIH<-DGEIH[DGEIH$exp=="NA",] #En caso que se proceda a retirar las observaciones 
-#con falta de información
+summary(DGEIH) #Se verifica que no existan NAs
 
 #####Punto 1.2.3
 
@@ -99,8 +100,19 @@ dim(DGEIH)
 head(DGEIH)
 tail(DGEIH)
 
-summary(DGEIH)
-#Se realiza el análisis descriptivo de las variables a tener en cuenta
+summary(DGEIH) #Se realiza el análisis descriptivo de las variables a tener en cuenta
+
+## data + mapping
+ggplot(data = DGEIH , mapping = aes(x = age , y = ingtot))
+
+## + geometry
+ggplot(data = DGEIH , mapping = aes(x = age , y = exp)) +
+  geom_point(col = "red" , size = 0.5)
+
+## by group
+ggplot(data = DGEIH , 
+       mapping = aes(x = age , y =ingtot , group=as.factor(formal) , color=as.factor(formal))) +
+  geom_point()
 
 
 
@@ -141,6 +153,12 @@ View(subset(DatosGEIH, select = c(ingtot, iof1 , iof1es, iof2, iof2es, iof3h, io
 View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_primaServicios_m, y_primaNavidad_m	, y_subEducativo_m , y_subFamiliar_m)))
 #Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
 #De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
+
+
+
+
+
+#####PUNTO 1.4.1
 
 
 
