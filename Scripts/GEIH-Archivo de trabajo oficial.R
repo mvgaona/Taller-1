@@ -2,22 +2,27 @@
 # Andrea Beleño - 200620739
 #Con este script se realizará el scraping de las bases de datos que serán usada 
 #para el desarrollo del Problem Set, específicamente puntos 1 y 2.
-library(pacman)
-p_load(rio)
-p_load(tidyverse)
-p_load(e1071)
-p_load(EnvStats)
-p_load(tidymodels)
-p_load(ggplot2)
-p_load(scales)
-p_load(ggpubr)
-p_load(knitr)
-p_load(kableExtra)
-p_load(foreing)
-p_load(skimr)
-p_load(rvest)
-p_load(caret)
-#BASE DE DATOS GEIH
+install.packages("pacman") #Instalar librería si no cuenta con esta 
+library(pacman) #Llamar librería
+p_load(rio, #Instalar librerías que falten
+       tidyverse,
+       e1071,
+       EnvStats,
+       tidymodels,
+       ggplot2,
+       scales,
+       ggpubr,
+       knitr,
+       kableExtra,
+       foreign,
+       skimr,
+       rvest,
+       caret,
+       stringr,
+       stargazer,
+       recipes)
+
+#####BASE DE DATOS GEIH Punto 1.1.1
 #Se importará la base de datos cada base de datos y se volverá data.frame para poder tenerlo en matriz.
 Base1 <- read_html("https://ignaciomsarmiento.github.io/GEIH2018_sample/pages/geih_page_1.html")%>%
   html_table()
@@ -52,24 +57,92 @@ Base10<- data.frame(Base10)
 #Al observar que cada una de las bases de datos si pudo ser importada, se procede a unir cada base de datos
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
+saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
+
+#trabajo de Rstudio
+#####Punto 1.2
+DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
+#con edad mayor o igual a 18 años
+
 #Ahora, procederemos a realizar la clasificación de variables.
-DGEIH<-subset(DatosGEIH, select = c( directorio,ingtot, pet, mes, age, sex,ocu) )
-View(DGEIH)
-exp <- floor(c(DatosGEIH$p6426/12))
+exp <- floor(c(DatosGEIH_18$p6426/12)) #Se anualiza la variable relacionada con la experiencia
 view(exp)
-educ <- DatosGEIH$p6210
+educ <- DatosGEIH_18$p6210 #Se asigna la variable educación
 View(educ)
-OfGEIH <- cbind(DGEIH, exp, educ)
-View(OfGEIH)
+DGEIH<-subset(DatosGEIH_18, select = c( "directorio","ingtot", "pet", "mes", "age", "sex","ocu") ) #Hacer un subset con las variables a usar
+DGEIH<-cbind(DGEIH, exp, educ) #Incluir las variables calculadas
+
+#####Punto 1.2.2
+
+DGEIH <- DGEIH %>% #Se vuelven categóricas las variables que así lo sean en la BD
+  mutate_at(.vars = c(
+    "directorio", "pet","sex", "ocu", "educ"),
+    .funs = factor)
+
+summary(DGEIH) #Se hace una inspección general de esta base de datos
+
+cantidad_na <- sapply(DGEIH, function(x) sum(is.na(x)))
+cantidad_na <- data.frame(cantidad_na)
+porcentaje_na <- cantidad_na/nrow(DGEIH)
+porcentaje_na <-porcentaje_na*100
+porcentaje_na #Visualizo el porcentaje de los datos que tienen NA
+
+DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA (Ver documento para explicación)
+
+summary(DGEIH) #Se verifica que no existan NAs
+
+#####Punto 1.2.3
+
+View(DGEIH)
+nrow(DGEIH)
+ncol(DGEIH)
+dim(DGEIH)
+head(DGEIH)
+tail(DGEIH)
+
+summary(DGEIH) #Se realiza el análisis descriptivo de las variables a tener en cuenta
+
+## data + mapping
+ggplot(data = DGEIH , mapping = aes(x = age , y = ingtot))
+
+## + geometry
+ggplot(data = DGEIH , mapping = aes(x = age , y = exp)) +
+  geom_point(col = "red" , size = 0.5)
+
+## by group
+ggplot(data = DGEIH , 
+       mapping = aes(x = age , y =ingtot , group=as.factor(formal) , color=as.factor(formal))) +
+  geom_point()
+
+
+
+#Ahora, procederemos a realizar la clasificación de variables.
+#DGEIH<-subset(DatosGEIH, select = c( directorio,ingtot, pet, mes, age, sex,ocu) )
+#View(DGEIH)
+#exp <- floor(c(DatosGEIH$p6426/12))
+#view(exp)
+#educ <- DatosGEIH$p6210
+#View(educ)
+#OfGEIH <- cbind(DGEIH, exp, educ)
+#View(OfGEIH)
 #La base de datos completa se llamará OfGEIH
-view(OfGEIH)
-nrow(OfGEIH)
-ncol(OfGEIH)
-dim(OfGEIH)
-head(OfGEIH)
-tail(OfGEIH)
-#PUNTO 1.3.1
-#Voy a analizar la variable que describe el ingreso
+##
+#view(OfGEIH)
+#nrow(OfGEIH)
+#ncol(OfGEIH)
+#dim(OfGEIH)
+#head(OfGEIH)
+#tail(OfGEIH)
+##
+#view(OfGEIH)
+#nrow(OfGEIH)
+#ncol(OfGEIH)
+#dim(OfGEIH)
+#head(OfGEIH)
+#tail(OfGEIH)
+
+#####PUNTO 1.3.1
+#Se va a analizar la variable que describe el ingreso
 #Primero decido analizar el ingreso total, ingreso total imputado y el observado.
 View(subset(DatosGEIH, select = c(ingtot, ingtotes, ingtotob)))
 #Por lo tanto, el ingreso total sería la suma del ingreso observado y el imputado.
@@ -80,6 +153,12 @@ View(subset(DatosGEIH, select = c(ingtot, iof1 , iof1es, iof2, iof2es, iof3h, io
 View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_primaServicios_m, y_primaNavidad_m	, y_subEducativo_m , y_subFamiliar_m)))
 #Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
 #De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
+
+
+
+
+
+#####PUNTO 1.4.1
 
 
 
