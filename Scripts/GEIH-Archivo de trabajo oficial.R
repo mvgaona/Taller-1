@@ -114,14 +114,15 @@ print(paste0("En promedio el ", round(p*100, 2), "% de las entradas están vací
 #head(OfGEIH)
 #tail(OfGEIH)
 ##
-view(OfGEIH)
-nrow(OfGEIH)
-ncol(OfGEIH)
-dim(OfGEIH)
-head(OfGEIH)
-tail(OfGEIH)
+#view(OfGEIH)
+#nrow(OfGEIH)
+#ncol(OfGEIH)
+#dim(OfGEIH)
+#head(OfGEIH)
+#tail(OfGEIH)
+
 #PUNTO 1.3.1
-#Voy a analizar la variable que describe el ingreso
+#Se va a analizar la variable que describe el ingreso
 #Primero decido analizar el ingreso total, ingreso total imputado y el observado.
 View(subset(DatosGEIH, select = c(ingtot, ingtotes, ingtotob)))
 #Por lo tanto, el ingreso total sería la suma del ingreso observado y el imputado.
