@@ -170,8 +170,6 @@ require("stargazer")
 stargazer(modelo1,type="text")
 #Se observa que tanto los residuales se ajustan a la recta de la regresión. 
 ggplot(DGEIH_AGE2)+ geom_point(aes(x= modelo1$residuals, y = lningtot))
-
-
 #####PUNTO 1.4.1
 
 
