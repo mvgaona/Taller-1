@@ -63,7 +63,6 @@ saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directori
 #####Punto 1.2
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
 #con edad mayor o igual a 18 años
-
 #Ahora, procederemos a realizar la clasificación de variables.
 exp <- floor(c(DatosGEIH_18$p6426/12)) #Se anualiza la variable relacionada con la experiencia
 view(exp)
@@ -71,7 +70,8 @@ educ <- DatosGEIH_18$p6210 #Se asigna la variable educación
 View(educ)
 DGEIH<-subset(DatosGEIH_18, select = c( "directorio","ingtot", "pet", "mes", "age", "sex","ocu") ) #Hacer un subset con las variables a usar
 DGEIH<-cbind(DGEIH, exp, educ) #Incluir las variables calculadas
-
+View(DGEIH)
+DGEIH<- DGEIH[DGEIH$ingtot>0,]
 #####Punto 1.2.2
 
 DGEIH <- DGEIH %>% #Se vuelven categóricas las variables que así lo sean en la BD
@@ -88,7 +88,7 @@ porcentaje_na <-porcentaje_na*100
 porcentaje_na #Visualizo el porcentaje de los datos que tienen NA
 
 DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA (Ver documento para explicación)
-
+DGEIH %>% subset(ingtot <= 2*iqr | is.na(ingtot)==T)
 summary(DGEIH) #Se verifica que no existan NAs
 
 #####Punto 1.2.3
@@ -154,8 +154,22 @@ View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_pr
 #Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
 #De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
 
-
-
+###PUNTO 1.3.2
+#Se realizará la creación de la variable Age^2 para proceder con la estimación del modelo
+lningtot<- log(DGEIH$ingtot)
+DGEIH_AGE2<- DGEIH %>% mutate(Age2=age^2)
+view(DGEIH_AGE2)
+DGEIH_AGE2 <- cbind(DGEIH_AGE2, lningtot)
+View(DGEIH_AGE2)
+#Estimación del modelo:
+require(tidyverse)
+ggplot(DGEIH_AGE2)+ geom_point(aes(x= age, y = lningtot)) #Gráfica de los datos para la observación de la relación visual de la variable age e ingtot
+modelo1 <- lm(lningtot~age + Age2, data = DGEIH_AGE2)
+summary(modelo1)
+require("stargazer")
+stargazer(modelo1,type="text")
+#Se observa que tanto los residuales se ajustan a la recta de la regresión. 
+ggplot(DGEIH_AGE2)+ geom_point(aes(x= modelo1$residuals, y = lningtot))
 
 
 #####PUNTO 1.4.1
