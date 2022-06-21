@@ -1,5 +1,6 @@
 # Valeria Gaona - 202214418
 # Andrea Beleño - 200620739
+#### PROBLEM SET 1 #####
 #Con este script se realizará el scraping de las bases de datos que serán usada 
 #para el desarrollo del Problem Set, específicamente puntos 1 y 2.
 install.packages("pacman") #Instalar librería si no cuenta con esta 
@@ -58,9 +59,7 @@ Base10<- data.frame(Base10)
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
 saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
-
-#trabajo de Rstudio
-#####Punto 1.2
+#####Punto 1.1.2
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
 #con edad mayor o igual a 18 años
 #Ahora, procederemos a realizar la clasificación de variables.
@@ -92,16 +91,12 @@ DGEIH %>% subset(ingtot <= 2*iqr | is.na(ingtot)==T)
 summary(DGEIH) #Se verifica que no existan NAs
 
 #####Punto 1.2.3
-
 View(DGEIH)
 nrow(DGEIH)
 ncol(DGEIH)
 dim(DGEIH)
 head(DGEIH)
 tail(DGEIH)
-
-summary(DGEIH) #Se realiza el análisis descriptivo de las variables a tener en cuenta
-
 ## data + mapping
 ggplot(data = DGEIH , mapping = aes(x = age , y = ingtot))
 
@@ -113,34 +108,65 @@ ggplot(data = DGEIH , mapping = aes(x = age , y = exp)) +
 ggplot(data = DGEIH , 
        mapping = aes(x = age , y =ingtot , group=as.factor(formal) , color=as.factor(formal))) +
   geom_point()
-
-
-
-#Ahora, procederemos a realizar la clasificación de variables.
-#DGEIH<-subset(DatosGEIH, select = c( directorio,ingtot, pet, mes, age, sex,ocu) )
-#View(DGEIH)
-#exp <- floor(c(DatosGEIH$p6426/12))
-#view(exp)
-#educ <- DatosGEIH$p6210
-#View(educ)
-#OfGEIH <- cbind(DGEIH, exp, educ)
-#View(OfGEIH)
-#La base de datos completa se llamará OfGEIH
-##
-#view(OfGEIH)
-#nrow(OfGEIH)
-#ncol(OfGEIH)
-#dim(OfGEIH)
-#head(OfGEIH)
-#tail(OfGEIH)
-##
-#view(OfGEIH)
-#nrow(OfGEIH)
-#ncol(OfGEIH)
-#dim(OfGEIH)
-#head(OfGEIH)
-#tail(OfGEIH)
-
+#Descripción age (Edad)
+Edad<- DGEIH$age
+class(Edad)
+plot(hist(Edad))
+mean(Edad)
+min(Edad)
+max(Edad)
+mean(Edad)
+modeEdad(Edad)
+modeEdad <- function(Edad){
+  return(as.numeric(names(which.max(table(Edad)))))
+}
+modeEdad(Edad)
+#Descripción PET
+PET <- DGEIH$pet
+View(DGEIH$pet)
+class(PET)
+levels(PET)
+summary(PET)
+#Educ
+plot(hist(educ))
+class(educ)
+mean(educ)
+modeEduc(educ)
+modeEduc <- function(educ){
+  return(as.numeric(names(which.max(table(educ)))))
+}
+modeEduc(educ)
+#Descripción Ocupación
+ocu<- DGEIH$ocu
+class(ocu)
+levels(ocu)
+summary(ocu)
+table(ocu)
+pie(table(ocu))#generando un gráfico de torta
+#Genero
+sex<- DGEIH$sex
+class(sex)
+levels(sex)
+summary(sex)
+table(sex)
+barplot(table(sex))
+#Descripción de Experiencia
+expp<- DGEIH$exp
+View(expp)
+class(expp)
+plot(hist(expp))
+mean(expp)
+min(expp)
+max(expp)
+modeExp(expp)
+modeExp <- function(expp){
+  return(as.numeric(names(which.max(table(expp)))))
+}
+modeExp(expp)
+#Descripción Directorio
+direc<- DGEIH$directorio
+View(direc)
+class(direc)
 #####PUNTO 1.3.1
 #Se va a analizar la variable que describe el ingreso
 #Primero decido analizar el ingreso total, ingreso total imputado y el observado.
@@ -153,7 +179,6 @@ View(subset(DatosGEIH, select = c(ingtot, iof1 , iof1es, iof2, iof2es, iof3h, io
 View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_primaServicios_m, y_primaNavidad_m	, y_subEducativo_m , y_subFamiliar_m)))
 #Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
 #De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
-
 ###PUNTO 1.3.2
 #Se realizará la creación de la variable Age^2 para proceder con la estimación del modelo
 lningtot<- log(DGEIH$ingtot)
