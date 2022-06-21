@@ -170,6 +170,70 @@ require("stargazer")
 stargazer(modelo1,type="text")
 #Se observa que tanto los residuales se ajustan a la recta de la regresión. 
 ggplot(DGEIH_AGE2)+ geom_point(aes(x= modelo1$residuals, y = lningtot))
+#Punto 1.3.3 Se analiza la predicción y su respectiva gráfica
+predingtot<- 12.881+0.048*DGEIH_AGE2$age - 0.0005* DGEIH_AGE2$Age2
+predingtot <- c(predingtot)
+predingtot<- data.frame(predingtot)
+View(predingtot)
+ggplot(predingtot) + geom_point(aes (x= DGEIH_AGE2$age, y = predingtot))
+#Punto 1.3.4 Bootstrap
+install.packages(boot)
+p_load(boot)
+require("tidyverse")
+set.seed(10101)
+R<- 1000
+est_modelo1 <- rep(0,R)
+for(i in 1: R){
+  ingtot_sam<- sample_frac(DGEIH_AGE2, size = 1,replace = TRUE)
+  modf<- lm(lningtot~age + Age2, data = ingtot_sam)
+  coefic<- modf$coefficients
+  est_modelo1[i]<- coefic[2]
+}
+
+plot(hist(est_modelo1))
+#Este vector está centrado al de rededor de 0.0475. Además, el coeficiente en cuestión, está dado por 0.048, centrado al rededor de ese valor. 
+#Tiene una forma aproximadamente normal.
+mean(est_modelo1)
+sqrt(var(est_modelo1))
+quantile(est_modelo1, c(0.025, 0.975))
+#Como ya tenemos un modelo complejo, nos dispondremos a dividir los coeficientes
+coeficientes<- modelo1$coefficients
+b0<-coeficientes[1]
+b0
+sqrt<- modelo1$
+  b1<-coeficientes[2]
+b1
+b2<-coeficientes[3]
+b2
+estimboot <- function(DGEIH_AGE2, index){
+  coef(lm(lningtot~age+ Age2, data = DGEIH_AGE2, subset = index))}
+resultado<- boot(DGEIH_AGE2, statistic = estimboot, R = 1000)
+resultado
+#Ahora, vamos a maximizar la función y obtener el error estándar
+#Para contar con la maximización y los coeficientes 
+age_bar<- mean(DGEIH_AGE2$age)
+age2_bar<- mean(DGEIH_AGE2$Age2)
+maxmod1<- b1+2*b2*age2_bar
+maxmod1
+#Ahora, se hará en múltipes muestras, usando la función
+n<- length(DGEIH_AGE2$lningtot)
+est_mod<- function(DGEIH_AGE2, index, 
+                   age_bar= mean(DGEIH_AGE2$Age2)){
+  fun<- lm(lningtot~ age + Age2, DGEIH_AGE2, subset = index)
+  coefsfun<-fun$coefficients
+  beta1<-coefsfun[2]
+  beta2<-coefsfun[3]
+  maxage<- beta1+ beta2*age2_bar*2
+  return(maxage)
+}
+est_mod(DGEIH_AGE2, 1:n)
+#El muestreo que generaré será el mismo tamaño de la muestra original:
+library(boot)
+results <- boot(data= DGEIH_AGE2, est_mod,R=1000)
+results
+#Edad pico
+PeakAge <-((-Beta1)/Beta2)*(1/2)
+PeakAge
 #####PUNTO 1.4.1
 
 
