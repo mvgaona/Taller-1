@@ -20,6 +20,7 @@ p_load(rio, #Instalar librerías que falten
        rvest,
        caret,
        stringr,
+       boot,
        stargazer,
        recipes)
 
