@@ -278,7 +278,7 @@ library(boot)
 results <- boot(data= DGEIH_AGE2, est_mod,R=1000)
 results
 #Edad pico
-PeakAge <-((-Beta1)/Beta2)*(1/2)
+PeakAge <-((-b1)/b2)*(1/2)
 PeakAge
 
 #####PUNTO 1.4.1
@@ -339,7 +339,6 @@ for(i in 1: R){
   coefic5<- modf5$coefficients
   est_modelo5[i]<- coefic5[2]
 }
-
 plot(hist(est_modelo5))
 #Este vector está centrado al de rededor de 0.031. Además, el coeficiente en cuestión, está dado por 0.0311, centrado al rededor de ese valor. 
 #Tiene una forma aproximadamente normal.
@@ -472,7 +471,7 @@ Datosoficios= Datosoficios %>% #Se asignan los cuantiles dependiendo del rango d
                                                 x >= q[2] & x < q[3] ~ "3", 
                                                 x >= q[3] & x < q[4] ~ "4", 
                                                 x >= q[4] ~ "5"))  
- 
+
 DGEIH_AGE2 <- DGEIH_AGE2 %>% #Se le asigna la nueva categoría en la nueva variable "Categor_oficio" en la base de datos de trabajo
   mutate(Categor_oficio= case_when((oficio==78|oficio==80|oficio==75| oficio==56| oficio==99| oficio==54|oficio==36|oficio==55|oficio==94|oficio==79|oficio==82|oficio==93|oficio==57|oficio==97|oficio==81|oficio==53) ~ "1", 
                                    (oficio==91|oficio==72|oficio==37| oficio==63| oficio==74| oficio==76|oficio==87|oficio==89|oficio==77|oficio==90|oficio==45|oficio==52|oficio==95|oficio==83|oficio==62|oficio==38) ~ "2", 
@@ -491,6 +490,34 @@ stargazer(modelo7,modelo8, modelo9, modelo10, type="text") #Visualización de lo
 
 
 ### PUNTO 1.5
+#Punto 1.5.1
+#Empezamos a estimar un modelo con solo la constante
+model1<- lm(lningtot~1, data = train)
+summary(model1)
+coef(model1)
+test$model1<-predict(model1,newdata = test)
+with(test,mean((lningtot-model1)^2))
+#Es decir, 5678395000000
+#Punto 1.5.2
+#Estimar los modelos de los puntos anteriores
+modelop3<- lm(lningtot~age+Age2,data= train)
+summary(modelop3)
+test$modelop3<-predict(modelop3,newdata = test)
+with(test,mean((lningtot-modelop3)^2))
+modelop4
+#Estimar diversos modelos
+modeloA<- lm(lningtot~ age + Age2 + age*Age2, data = train)
+summary(modeloA)
+test$modeloA <- predict(modeloA, newdata = test)
+with(test, mean(lningtot-modeloA)^2)
+modeloB <- lm(lningtot~age + age^3, data = train)
+summary(modeloB)
+test$modeloB <- predict(modeloB, newdata = test)
+with(test, mean(lningtot-modeloB)^2)
+modeloC<- lm(lningtot~ age + age*Age2^2, data= train)
+summary(modeloC)
+test$modeloC <- predict(modeloC, newdata = test)
+with(test, mean(lningtot-modelo4)^2)
 
 
 
