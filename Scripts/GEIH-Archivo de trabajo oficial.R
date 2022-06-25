@@ -63,17 +63,14 @@ Base9 <- data.frame(Base9)
 Base10 <- read_html("https://ignaciomsarmiento.github.io/GEIH2018_sample/pages/geih_page_10.html")%>% 
   html_table()
 Base10<- data.frame(Base10)
-
 #Al observar que cada una de las bases de datos si pudo ser importada, se procede a unir cada base de datos
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
-
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
 
-#DatosGEIH<-readRDS("Datos_GEIH.Rds")
-#saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
+DatosGEIH<-readRDS("Datos_GEIH.Rds")
+saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
 
 #####Punto 1.1.2
-
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
 #con edad mayor o igual a 18 años
 #Ahora, procederemos a realizar la clasificación de variables.
@@ -85,9 +82,7 @@ DGEIH<-subset(DatosGEIH_18, select = c( "ingtot", "pet", "mes", "age", "sex","oc
 DGEIH<-cbind(DGEIH, exp, educ) #Incluir las variables calculadas
 View(DGEIH)
 DGEIH<- DGEIH[DGEIH$ingtot>0,]
-
 #####Punto 1.2.2
-
 summary(DGEIH) #Se hace una inspección general de esta base de datos
 
 #Se realiza la inspección para determinar cuántas variables contienen NA
@@ -96,15 +91,12 @@ cantidad_na <- data.frame(cantidad_na)
 porcentaje_na <- cantidad_na/nrow(DGEIH)
 porcentaje_na <-porcentaje_na*100
 porcentaje_na #Visualizo el porcentaje de los datos que tienen NA
-
 DGEIH$oficio[is.na(DGEIH$oficio)] = 100 #Se imputa la nueva categoría 1oo a Oficio
 
 DGEIH <- DGEIH %>% #Se vuelven categóricas las variables que así lo sean en la BD
   mutate_at(.vars = c(
     "pet","sex", "ocu", "educ", "oficio"),
     .funs = factor)
-
-
 
 DGEIH[is.na(DGEIH)] = 0 #Se asigna 0 a las NA de la variable "exp" (Ver documento para explicación)
 #DGEIH %>% subset(ingtot <= 2*iqr | is.na(ingtot)==T)
@@ -117,7 +109,6 @@ ncol(DGEIH)
 dim(DGEIH)
 head(DGEIH)
 tail(DGEIH)
-
 #Descripción age (Edad)
 Edad<- DGEIH$age
 class(Edad)
@@ -173,7 +164,6 @@ modeExp <- function(expp){
   return(as.numeric(names(which.max(table(expp)))))
 }
 modeExp(expp)
-
 #Descripción oficio (oficio)
 library(modeest)
 Oficio_<- DGEIH$oficio
@@ -183,10 +173,7 @@ summary(Oficio_)
 table(Oficio_)
 barplot(table((Oficio_)))
 mlv(Oficio_, method = "mfv")
-
-
 #####PUNTO 1.3.1
-
 #Se va a analizar la variable que describe el ingreso
 #Primero decido analizar el ingreso total, ingreso total imputado y el observado.
 View(subset(DatosGEIH, select = c(ingtot, ingtotes, ingtotob)))
@@ -198,10 +185,7 @@ View(subset(DatosGEIH, select = c(ingtot, iof1 , iof1es, iof2, iof2es, iof3h, io
 View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_primaServicios_m, y_primaNavidad_m	, y_subEducativo_m , y_subFamiliar_m)))
 #Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
 #De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
-
-
 ###PUNTO 1.3.2
-
 #Se realizará la creación de la variable Age^2 para proceder con la estimación del modelo
 lningtot<- log(DGEIH$ingtot)
 DGEIH_AGE2<- DGEIH %>% mutate(Age2=age^2)
@@ -224,65 +208,45 @@ predingtot<- data.frame(predingtot)
 View(predingtot)
 ggplot(predingtot) + geom_point(aes (x= DGEIH_AGE2$age, y = predingtot))
 #Punto 1.3.4 Bootstrap
-
+#Ahora, vamos a medir la maximización, dentro de todos los puntos de la distribución, se escogerá la media de cada variable para contar con la maximización y poder generar el peakage 
+age_bar<- mean(DGEIH_AGE2$age)
+age2_bar<- mean(DGEIH_AGE2$Age2)
+coeficientes<- modelo1$coefficients
+beta0<-coeficientes[1]
+beta0
+beta1<-coeficientes[2]
+beta1
+beta2<-coeficientes[3]
+beta2
 require("tidyverse")
 set.seed(10101)
 R<- 1000
 est_modelo1 <- rep(0,R)
-for(i in 1: R){
-  ingtot_sam<- sample_frac(DGEIH_AGE2, size = 1,replace = TRUE)
-  modf<- lm(lningtot~age + Age2, data = ingtot_sam)
-  coefic<- modf$coefficients
-  est_modelo1[i]<- coefic[2]
+for(i in 1: R){ age_bar<- mean(DGEIH_AGE2$age)
+age2_bar<- mean(DGEIH_AGE2$Age2)
+ingtot_sam<- sample_frac(DGEIH_AGE2, size = 1,replace = TRUE)
+modf<- lm(lningtot~age + Age2, data = ingtot_sam)
+coefic<- modf$coefficients
+coefic
+beta0 <- coefic[1]
+beta1<- coefic[2]
+beta2 <- coefic[3]
+est_modelo1[i]<- beta1/(-2*beta2)
 }
-
 plot(hist(est_modelo1))
-#Este vector está centrado al de rededor de 0.0475. Además, el coeficiente en cuestión, está dado por 0.048, centrado alrededor de ese valor. 
-#Tiene una forma aproximadamente normal.
+#Este vector está centrado al de rededor de 48 y tiene una forma aproximadamente normal.
 mean(est_modelo1)
 sqrt(var(est_modelo1))
 quantile(est_modelo1, c(0.025, 0.975))
-#Como ya tenemos un modelo complejo, nos dispondremos a dividir los coeficientes
-coeficientes<- modelo1$coefficients
-b0<-coeficientes[1]
-b0
-sqrt<- modelo1$#Esto para qué es?
-  b1<-coeficientes[2]
-b1
-b2<-coeficientes[3]
-b2
-estimboot <- function(DGEIH_AGE2, index){
+PeakAge <- beta1/(-2*beta2)
+PeakAge
+estimboot <- function(DGEIH_AGE2, index, 
+                      age_bar = mean(DGEIH_AGE2$age), 
+                      age2_bar =  mean(DGEIH_AGE2$Age2) ){
   coef(lm(lningtot~age+ Age2, data = DGEIH_AGE2, subset = index))}
 resultado<- boot(DGEIH_AGE2, statistic = estimboot, R = 1000)
 resultado
-#Ahora, vamos a maximizar la función y obtener el error estándar
-#Para contar con la maximización y los coeficientes 
-age_bar<- mean(DGEIH_AGE2$age)
-age2_bar<- mean(DGEIH_AGE2$Age2)
-maxmod1<- b1+2*b2*age2_bar
-maxmod1
-#Ahora, se hará en múltipes muestras, usando la función
-n<- length(DGEIH_AGE2$lningtot)
-est_mod<- function(DGEIH_AGE2, index, 
-                   age_bar= mean(DGEIH_AGE2$Age2)){
-  fun<- lm(lningtot~ age + Age2, DGEIH_AGE2, subset = index)
-  coefsfun<-fun$coefficients
-  beta1<-coefsfun[2]
-  beta2<-coefsfun[3]
-  maxage<- beta1+ beta2*age2_bar*2
-  return(maxage)
-}
-est_mod(DGEIH_AGE2, 1:n)
-#El muestreo que generaré será el mismo tamaño de la muestra original:
-library(boot)
-results <- boot(data= DGEIH_AGE2, est_mod,R=1000)
-results
-#Edad pico
-PeakAge <-((-b1)/b2)*(1/2)
-PeakAge
-
 #####PUNTO 1.4.1
-
 #Crear columna con datos para mujer (negación lógica de la columna sex)
 DGEIH_AGE2 <- DGEIH_AGE2 %>% 
   mutate(sex_female= ifelse(test = sex ==1, 
