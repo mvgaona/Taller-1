@@ -238,14 +238,14 @@ plot(hist(est_modelo1))
 mean(est_modelo1)
 sqrt(var(est_modelo1))
 quantile(est_modelo1, c(0.025, 0.975))
-PeakAge <- beta1/(-2*beta2)
-PeakAge
 estimboot <- function(DGEIH_AGE2, index, 
                       age_bar = mean(DGEIH_AGE2$age), 
                       age2_bar =  mean(DGEIH_AGE2$Age2) ){
   coef(lm(lningtot~age+ Age2, data = DGEIH_AGE2, subset = index))}
 resultado<- boot(DGEIH_AGE2, statistic = estimboot, R = 1000)
 resultado
+PeakAge <- beta1/(-2*beta2)
+PeakAge
 #####PUNTO 1.4.1
 #Crear columna con datos para mujer (negación lógica de la columna sex)
 DGEIH_AGE2 <- DGEIH_AGE2 %>% 
