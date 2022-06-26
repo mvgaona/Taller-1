@@ -7,3 +7,7 @@ Es fundamental conocer el contexto Colombiano, en donde el mercado laboral y el 
 
 En el siguiente repositorio  se encuentra el taller 1, en donde se analiza con diversos elementos el ingreso total de los individuos mayores a 18 años. Este repositorio está dividido entre  3 carpetas principales. En documentos, se encuentra el desarrollo del Problem Set 1 en PDF, en donde se argumenta cada una de las respuestas y el análisis de los códigos utilizados durante la programación. Por otra parte, en la carpeta Script se encuentra el archivo de trabajo en R, donde se presentan toda la programación realizada para cada uno de los modelos y su respectiva interpretación. Finalmente, se encuentra la carpeta Elementos guardados, en donde se encuentra la base de datos principal, la cual fue utilizada para desarrollar todo el taller.  
  
+En la carpeta "Documentos" se encuentra el documento donde se consignan las respuestas a cada punto del taller, en el achivo: "Problem Set 1.pdf" y "Problem Set 1.pdf"
+En la carpeta" Scripts" se encuentra el código fuente en R con el desarrollo del Problem Set 1.
+En la carpeta "Elementos guardados" se encuentra la base de datos compilada.
+En la carpeta "Vistas" se encuentran las imágenes de la graficación de los datos del punto del taller, con el número igual al del punto.
