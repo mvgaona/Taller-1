@@ -515,6 +515,21 @@ with(test, mean(lningtot-modelo4)^2)
 
 #Leverage statistic
 
+#Definición de las variables
+u<-"111"
+h<-"111"
+data.frame(u,h)
+regg2<-lm(lningtot~sex_female, data = test)
+
+#Calcular el leverage para el modelo con el menor MSE
+
+u<-lm(lningtot~sex_female, data = test)$residual
+u
+h<-lm.influence(regg2)$hat
+h
+alpha<-u/(1-h)
+alpha
+max(alpha)
 
 #1.5.2 K-Fold
 
