@@ -68,7 +68,7 @@ Base10<- data.frame(Base10)
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
 
 DatosGEIH<-readRDS("Datos_GEIH.Rds")
-saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
+#saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
 
 #####Punto 1.1.2
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
@@ -246,7 +246,10 @@ resultado<- boot(DGEIH_AGE2, statistic = estimboot, R = 1000)
 resultado
 PeakAge <- beta1/(-2*beta2)
 PeakAge
+
+
 #####PUNTO 1.4.1
+
 #Crear columna con datos para mujer (negación lógica de la columna sex)
 DGEIH_AGE2 <- DGEIH_AGE2 %>% 
   mutate(sex_female= ifelse(test = sex ==1, 
@@ -454,7 +457,21 @@ stargazer(modelo7,modelo8, modelo9, modelo10, type="text") #Visualización de lo
 
 
 ### PUNTO 1.5
-#Punto 1.5.1
+
+#Punto 1.5.1.1
+
+#Código incluido------------
+set.seed(10101)
+DGEIH_AGE2 <- DGEIH_AGE2 %>%
+          mutate(holdout= as.logical(1:nrow(DGEIH_AGE2) %in%
+                               sample(nrow(DGEIH_AGE2), nrow(DGEIH_AGE2)*.3)))
+         #genera un indicador general para definir el train y el test (30%)
+
+#Se crean las bases para el test y train         
+test<-DGEIH_AGE2[DGEIH_AGE2$holdout==T,]
+train<-DGEIH_AGE2[DGEIH_AGE2$holdout==F,]
+#..............................................
+
 #Empezamos a estimar un modelo con solo la constante
 model1<- lm(lningtot~1, data = train)
 summary(model1)
@@ -462,13 +479,19 @@ coef(model1)
 test$model1<-predict(model1,newdata = test)
 with(test,mean((lningtot-model1)^2))
 #Es decir, 5678395000000
-#Punto 1.5.2
+
+#Punto 1.5.1.2
+
 #Estimar los modelos de los puntos anteriores
 modelop3<- lm(lningtot~age+Age2,data= train)
 summary(modelop3)
 test$modelop3<-predict(modelop3,newdata = test)
 with(test,mean((lningtot-modelop3)^2))
 modelop4
+
+
+
+#Punto 1.5.1.3
 #Estimar diversos modelos
 modeloA<- lm(lningtot~ age + Age2 + age*Age2, data = train)
 summary(modeloA)
@@ -483,5 +506,18 @@ summary(modeloC)
 test$modeloC <- predict(modeloC, newdata = test)
 with(test, mean(lningtot-modelo4)^2)
 
+
+#Punto 1.5.1.4
+
+
+
+#Punto 1.5.1.5
+
+#Leverage statistic
+
+
+#1.5.2 K-Fold
+
+#1.5.3 LCOOV
 
 
