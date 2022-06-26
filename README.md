@@ -1,5 +1,6 @@
 # Problem Set 1
-Por: Andrea Beleño y Valeria Gaona
+
+Elaborado por: Andrea Beleño y Valeria Gaona
 
 El estudio de datos es fundamental para poder construir predicciones robustas y que sean útiles para las diferentes investigaciones que se puedan realizar. Lo anterior conlleva al enfrentamiento con casos reales en donde los datos deben ser tratados para poder crear modelos los cuales se pueda generar estimaciones y así, aplicar conceptos que se verán reflejados dentro del análisis. Es por eso que en el siguiente repositorio se encuentra el proceso implementado para la aplicación de diferentes herramientas para la predicción del ingreso total en diversos modelos, la importación de la base de datos, su limpieza, estimación de los diferentes modelos, la proyección y el análisis estadístico de las variables, entre otras.
 
