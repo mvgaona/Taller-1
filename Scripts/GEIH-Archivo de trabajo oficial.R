@@ -187,7 +187,9 @@ View(subset(DatosGEIH, select = c(ingtot, iof1 , iof1es, iof2, iof2es, iof3h, io
 View(subset(DatosGEIH, select = c(ingtot, y_primas_m, y_primaVacaciones_m	, y_primaServicios_m, y_primaNavidad_m	, y_subEducativo_m , y_subFamiliar_m)))
 #Algunas variables son parte del ingreso total, por lo tanto, se compararán todas las variables contra Ingreso total para hacer la última verificación acerca de la variable ingtot
 #De acuerdo a todas las verificaciones anteriores, se comprueba que la variable que describe el ingreso es igntot (Ingreso total), ya que esta contiene todas las demás variables acerca del ingreso que se encuentran en la base de datos de la GEIH
+
 ###PUNTO 1.3.2
+
 #Se realizará la creación de la variable Age^2 para proceder con la estimación del modelo
 lningtot<- log(DGEIH$ingtot)
 DGEIH_AGE2<- DGEIH %>% mutate(Age2=age^2)
