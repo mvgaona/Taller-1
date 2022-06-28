@@ -24,6 +24,8 @@ p_load(rio, #Instalar librerías que falten
        caret,
        stringr,
        boot,
+       caret,
+       ISLR2,
        stargazer,
        modeest,
        recipes)
@@ -194,7 +196,7 @@ DGEIH_AGE2 <- cbind(DGEIH_AGE2, lningtot)
 View(DGEIH_AGE2)
 #Estimación del modelo:
 require(tidyverse)
-ggplot(DGEIH_AGE2)+ geom_point(aes(x= age, y = lningtot)) #Gráfica de los datos para la observación de la relación visual de la variable age e ingtot
+#ggplot(DGEIH_AGE2)+ geom_point(aes(x= age, y = lningtot)) #Gráfica de los datos para la observación de la relación visual de la variable age e ingtot
 modelo1 <- lm(lningtot~age + Age2, data = DGEIH_AGE2)
 summary(modelo1)
 require("stargazer")
@@ -285,137 +287,89 @@ plot(x, y, main = "Regresión edad por género",
 plot(x, y, main = "Regresión edad por género",
      xlab = "Edad", ylab = "LnIngtot",
      pch = 19, frame = FALSE)
-abline(lm(lningtot~age + Age2,data=DGEIH_AGE2, subset=sex_female==1), col = "red")
+abline(lm(lningtot~age + Age2,data=DGEIH_AGE2, subset=sex_female==1), col = "red", label)
 abline(lm(lningtot~age + Age2,data=DGEIH_AGE2, subset=sex_female==0), col = "blue")
 
-#1.4.3
-
-#Para la mujer
-predingtot_female<- 13.159+0.031*DGEIH_AGE2$age - 0.0004* DGEIH_AGE2$Age2
-predingtot_female <- c(predingtot_female)
-predingtot_female<- data.frame(predingtot_female)
-View(predingtot_female)
-ggplot(predingtot_female) + geom_point(aes (x= DGEIH_AGE2$age, y = predingtot_female))
-
+#1.4.3 - Bootstrap
+#Ahora, vamos a medir la maximización, dentro de todos los puntos de la distribución, 
+#se escogerá la media de cada variable para contar con la maximización y poder generar el peak age para mujeres, inicialmente
+library(boot)
+age_bar_5<- mean(DGEIH_AGE2_female $age)
+age2_bar_5<- mean(DGEIH_AGE2_female $Age2)
+coeficientes_5<- modelo5$coefficients
+beta0_5<-coeficientes_5[1]
+beta0_5
+beta1_5<-coeficientes_5[2]
+beta1_5
+beta2_5<-coeficientes_5[3]
+beta2_5
+require("tidyverse")
 set.seed(10101)
 R<- 1000
 est_modelo5 <- rep(0,R)
-for(i in 1: R){
-  ingtot_sam5<- sample_frac(DGEIH_AGE2_female, size = 1,replace = TRUE)
-  modf5<- lm(lningtot~age + Age2, data = ingtot_sam5, subset=sex_female==1)
-  coefic5<- modf5$coefficients
-  est_modelo5[i]<- coefic5[2]
+for(i in 1: R){ age_bar_5<- mean(DGEIH_AGE2_female$age)
+age2_bar_5<- mean(DGEIH_AGE2_female$Age2)
+ingtot_sam_5<- sample_frac(DGEIH_AGE2_female, size = 1,replace = TRUE)
+modf_5<- lm(lningtot~age + Age2, data = ingtot_sam_5)
+coefic5<- modf_5$coefficients
+coefic5
+beta0_5 <- coefic5[1]
+beta1_5<- coefic5[2]
+beta2_5 <- coefic5[3]
+est_modelo5[i]<- beta1_5/(-2*beta2_5)
 }
 plot(hist(est_modelo5))
-#Este vector está centrado al de rededor de 0.031. Además, el coeficiente en cuestión, está dado por 0.0311, centrado al rededor de ese valor. 
-#Tiene una forma aproximadamente normal.
+#Este vector está centrado al de rededor de 44 y tiene una forma aproximadamente normal.
 mean(est_modelo5)
 sqrt(var(est_modelo5))
-quantile(est_modelo5, c(0.025, 0.975))
-#Como ya tenemos un modelo complejo, nos dispondremos a dividir los coeficientes
-coeficientes5<- modelo5$coefficients
-b0_5<-coeficientes5[1]
-b0_5
+quantile(est_modelo5, c(0.025, 0.975)) #Los intervalos de confianza
+estimboot5 <- function(DGEIH_AGE2_female, index, 
+                      age_bar_5 = mean(DGEIH_AGE2_female$age), 
+                      age2_bar_5 =  mean(DGEIH_AGE2_female$Age2) ){
+  coef(lm(lningtot~age+ Age2, data = DGEIH_AGE2_female, subset = index))}
+resultado5<- boot(DGEIH_AGE2_female, statistic = estimboot5, R = 1000)
+resultado5
+PeakAge5 <- beta1_5/(-2*beta2_5)
+PeakAge5
 
-b1_5<-coeficientes5[2]
-b1_5
-b2_5<-coeficientes5[3]
-b2_5
-estimboot5 <- function(DGEIH_AGE2_female, index){
-  coef(lm(lningtot~age + Age2, data = DGEIH_AGE2_female, (subset = index)))}
-resultado_5<- boot(DGEIH_AGE2_female, statistic = estimboot5, R = 1000)
-resultado_5
-#Ahora, vamos a maximizar la función y obtener el error estándar
-#Para contar con la maximización y los coeficientes 
-age_bar_5<- mean(DGEIH_AGE2_female$age)
-age2_bar_5<- mean(DGEIH_AGE2_female$Age2)
-maxmod5<- b1_5+2*b2_5*age2_bar_5
-maxmod5
-#Ahora, se hará en múltipes muestras, usando la función
-n_5<- length(DGEIH_AGE2_female$lningtot)
-est_mod_5<- function(DGEIH_AGE2_female, index, 
-                     age_bar_5= mean(DGEIH_AGE2_female$Age2)){
-  fun5<- lm(lningtot~ age + Age2, data=DGEIH_AGE2_female, subset = index)
-  coefsfun_5<-fun5$coefficients
-  beta1_5<-coefsfun_5[2]
-  beta2_5<-coefsfun_5[3]
-  maxage_5<- beta1_5+ beta2_5*age2_bar_5*2
-  return(maxage_5)
-}
-est_mod_5(DGEIH_AGE2, 1:n_5)
-#El muestreo que generaré será el mismo tamaño de la muestra original:
-library(boot)
-results_5 <- boot(data= DGEIH_AGE2_female, est_mod_5,R=1000)
-results_5
-#Edad pico
-PeakAge_female <-((-b1_5)/b2_5)*(1/2)
-PeakAge_female
-
-
-
-#Para el hombre
-
-predingtot_male<- 12.619+0.063*DGEIH_AGE2$age - 0.001* DGEIH_AGE2$Age2
-predingtot_male <- c(predingtot_male)
-predingtot_male<- data.frame(predingtot_male)
-predingtot_male<-cbind(predingtot_male, predingtot_female)
-View(predingtot_male)
-ggplot(predingtot_male) + geom_point(aes(x= DGEIH_AGE2$age, y = predingtot_male))
-
+#Se hará el mismo análisis anterior, pero para los hombres
+age_bar_6<- mean(DGEIH_AGE2_male $age)
+age2_bar_6<- mean(DGEIH_AGE2_male $Age2)
+coeficientes_6<- modelo6$coefficients
+beta0_6<-coeficientes_6[1]
+beta0_6
+beta1_6<-coeficientes_6[2]
+beta1_6
+beta2_6<-coeficientes_6[3]
+beta2_6
+require("tidyverse")
 set.seed(10101)
 R<- 1000
 est_modelo6 <- rep(0,R)
-for(i in 1: R){
-  ingtot_sam6<- sample_frac(DGEIH_AGE2_male, size = 1,replace = TRUE)
-  modf6<- lm(lningtot~age + Age2, data = ingtot_sam6, subset=sex_female==0)
-  coefic6<- modf6$coefficients
-  est_modelo6[i]<- coefic6[2]
+for(i in 1: R){ age_bar_6<- mean(DGEIH_AGE2_male$age)
+age2_bar_6<- mean(DGEIH_AGE2_male$Age2)
+ingtot_sam_6<- sample_frac(DGEIH_AGE2_male, size = 1,replace = TRUE)
+modf_6<- lm(lningtot~age + Age2, data = ingtot_sam_6)
+coefic6<- modf_6$coefficients
+coefic6
+beta0_6 <- coefic6[1]
+beta1_6<- coefic6[2]
+beta2_6 <- coefic6[3]
+est_modelo6[i]<- beta1_6/(-2*beta2_6)
 }
-
 plot(hist(est_modelo6))
-#Este vector está centrado al de rededor de 0.0475. Además, el coeficiente en cuestión, está dado por 0.048, centrado al rededor de ese valor. 
-#Tiene una forma aproximadamente normal.
+#Este vector está centrado al de rededor de 50 y tiene una forma aproximadamente normal.
 mean(est_modelo6)
 sqrt(var(est_modelo6))
-quantile(est_modelo6, c(0.025, 0.975))
-#Como ya tenemos un modelo complejo, nos dispondremos a dividir los coeficientes
-coeficientes6<- modelo6$coefficients
-b0_6<-coeficientes6[1]
-b0_6
-
-b1_6<-coeficientes6[2]
-b1_6
-b2_6<-coeficientes6[3]
-b2_6
-estimboot6 <- function(DGEIH_AGE2_male, index){
-  coef(lm(lningtot~age + Age2, data = DGEIH_AGE2_male, (subset = index)))}
-resultado_6<- boot(DGEIH_AGE2_male, statistic = estimboot6, R = 1000)
-resultado_6
-#Ahora, vamos a maximizar la función y obtener el error estándar
-#Para contar con la maximización y los coeficientes 
-age_bar_6<- mean(DGEIH_AGE2_male$age)
-age2_bar_6<- mean(DGEIH_AGE2_male$Age2)
-maxmod6<- b1_6+2*b2_6*age2_bar_6
-maxmod6
-#Ahora, se hará en múltipes muestras, usando la función
-n_6<- length(DGEIH_AGE2_male$lningtot)
-est_mod_6<- function(DGEIH_AGE2_male, index, 
-                     age_bar_6= mean(DGEIH_AGE2_male$Age2)){
-  fun6<- lm(lningtot~ age + Age2, data=DGEIH_AGE2_male, subset = index)
-  coefsfun_6<-fun6$coefficients
-  beta1_6<-coefsfun_6[2]
-  beta2_6<-coefsfun_6[3]
-  maxage_6<- beta1_6+ beta2_6*age2_bar_6*2
-  return(maxage_6)
-}
-est_mod_6(DGEIH_AGE2_male, 1:n_6)
-#El muestreo que generaré será el mismo tamaño de la muestra original:
-library(boot)
-results_6 <- boot(data= DGEIH_AGE2_male, est_mod_6,R=1000)
-results_6
-#Edad pico
-PeakAge_male <-((-b1_6)/b2_6)*(1/2)
-PeakAge_male
+quantile(est_modelo6, c(0.025, 0.975)) #Los intervalos de confianza
+estimboot6 <- function(DGEIH_AGE2_male, index, 
+                       age_bar_6 = mean(DGEIH_AGE2_male$age), 
+                       age2_bar_6 =  mean(DGEIH_AGE2_male$Age2) ){
+  coef(lm(lningtot~age+ Age2, data = DGEIH_AGE2_male, subset = index))}
+resultado6<- boot(DGEIH_AGE2_male, statistic = estimboot6, R = 1000)
+resultado6
+PeakAge6 <- beta1_6/(-2*beta2_6)
+PeakAge6
 
 #1.4.4
 
@@ -460,7 +414,6 @@ stargazer(modelo7,modelo8, modelo9, modelo10, type="text") #Visualización de lo
 
 #Punto 1.5.1.1
 
-#Código incluido------------
 set.seed(10101)
 DGEIH_AGE2 <- DGEIH_AGE2 %>%
           mutate(holdout= as.logical(1:nrow(DGEIH_AGE2) %in%
@@ -470,69 +423,386 @@ DGEIH_AGE2 <- DGEIH_AGE2 %>%
 #Se crean las bases para el test y train         
 test<-DGEIH_AGE2[DGEIH_AGE2$holdout==T,]
 train<-DGEIH_AGE2[DGEIH_AGE2$holdout==F,]
-#..............................................
+
 
 #Empezamos a estimar un modelo con solo la constante
 model1<- lm(lningtot~1, data = train)
 summary(model1)
 coef(model1)
 test$model1<-predict(model1,newdata = test)
-with(test,mean((lningtot-model1)^2))
-#Es decir, 5678395000000
+#Se calcula el MSE
+MSE_modelos_1<-with(test,mean((lningtot-model1)^2))
+stargazer(model1, type="text")
+#Es decir, el MSE se encuentra en: 
+
 
 #Punto 1.5.1.2
 
-#Estimar los modelos de los puntos anteriores
-modelop3<- lm(lningtot~age+Age2,data= train)
-summary(modelop3)
-test$modelop3<-predict(modelop3,newdata = test)
-with(test,mean((lningtot-modelop3)^2))
-modelop4
+#Se estiman los modelos de los puntos anteriores (del 1.3, 1.4)
+#Modelo del punto 1.3
+model2<- lm(lningtot~age + Age2, data = train)
+summary(model2)
+coef(model2)
+test$model2<-predict(model2,newdata = test)
+#Se calcula el MSE
+MSE_modelos_2<-with(test,mean((lningtot-model2)^2))
 
+#Se calcula el MSE para el Modelo del punto 1.4.1
+model3<- lm(lningtot~sex_female, data = train)
+summary(model3)
+coef(model3)
+test$model3<-predict(model3,newdata = test)
+#Se calcula el MSE
+MSE_modelos_3<-with(test,mean((lningtot-model3)^2))
+stargazer(model3, type="text")
+
+#Se calcula el MSE para el Modelo del punto 1.4.4
+model4<- lm(lningtot~sex_female+Categor_oficio, data = train)
+summary(model4)
+coef(model4)
+test$model4<-predict(model4,newdata = test)
+#Se calcula el MSE
+MSE_modelos_4<-with(test,mean((lningtot-model4)^2))
+stargazer(model2, model3, model4, type="text")
 
 
 #Punto 1.5.1.3
-#Estimar diversos modelos
-modeloA<- lm(lningtot~ age + Age2 + age*Age2, data = train)
-summary(modeloA)
-test$modeloA <- predict(modeloA, newdata = test)
-with(test, mean(lningtot-modeloA)^2)
-modeloB <- lm(lningtot~age + age^3, data = train)
-summary(modeloB)
-test$modeloB <- predict(modeloB, newdata = test)
-with(test, mean(lningtot-modeloB)^2)
-modeloC<- lm(lningtot~ age + age*Age2^2, data= train)
-summary(modeloC)
-test$modeloC <- predict(modeloC, newdata = test)
-with(test, mean(lningtot-modelo4)^2)
+
+#Estimar diversos modelos,con la base train y el error con la base test
+
+model5<- lm(lningtot~sex_female+ocu,data= train)
+#summary(model5)
+test$model5<-predict(model5,newdata = test)
+MSE_modelos_5<-with(test,mean((lningtot-model5)^2))
+
+model6<- lm(lningtot~ ocu +age+exp+ sex_female*Age2, data= train)
+#summary(model6)
+test$model6 <- predict(model6, newdata = test)
+MSE_modelos_6<-with(test, mean(lningtot-model6)^2)
+
+model7<- lm(lningtot~sex_female+ocu+exp+age+Age2,data= train)
+#summary(model7)
+test$model7<-predict(model7,newdata = test)
+MSE_modelos_7<-with(test,mean((lningtot-model7)^2))
+
+model8<- lm(lningtot~sex_female+ocu+exp+poly(age,3),data= train)
+#summary(model8)
+test$model8<-predict(model8,newdata = test)
+MSE_modelos_8<-with(test,mean((lningtot-model8)^2))
+
+model9<- lm(lningtot~+sex_female+ocu+exp+poly(age,4),data= train)
+#summary(model9)
+test$model9<-predict(model9,newdata = test)
+MSE_modelos_9<-with(test,mean((lningtot-model9)^2))
 
 
 #Punto 1.5.1.4
 
+MSE_modelos<-c(MSE_modelos_1, MSE_modelos_2, MSE_modelos_3, MSE_modelos_4, MSE_modelos_5, MSE_modelos_6,MSE_modelos_7, MSE_modelos_8, MSE_modelos_9)
+x_label<-c('modelo1','modelo 2', 'modelo3', 'modelo 4', 'modelo5','modelo6','modelo7','modelo8', 'modelo9')
+MSE_<-data.frame(x_label,MSE_modelos)
 
+#Se grafica los MSE para cada modelo
+ggplot(data=MSE_, aes(x = x_label, y = MSE_modelos, group=1)) + 
+  geom_line()+   geom_point()
 
+#Para tener idea de cuáles modelos tienen el MSE más bajo
+MSE_ordenado <- MSE_[order(MSE_$MSE_modelos), ]
+View(MSE_ordenado)
 #Punto 1.5.1.5
 
 #Leverage statistic
 
 #Definición de las variables
-u<-"111"
-h<-"111"
-data.frame(u,h)
-regg2<-lm(lningtot~sex_female, data = test)
+
+alpha <- c()
+u <- c()
+h <- c()
+
+#El modelo con menor MSE es el siguiente y se calcula para el test:
+modell6<-lm(lningtot~ ocu+age+exp+ sex_female*Age2, data = test)
 
 #Calcular el leverage para el modelo con el menor MSE
 
-u<-lm(lningtot~sex_female, data = test)$residual
-u
-h<-lm.influence(regg2)$hat
-h
-alpha<-u/(1-h)
-alpha
-max(alpha)
+alphass <- c()
+for (j in 1:nrow(test)) {
+  uj <- modell6$residual[j]
+  hj <- lm.influence(modell6)$hat[j]
+  alpha <- uj/(1-hj)
+  alphass <- c(alphass, alpha)
+} 
+
+#Otra alternativa en vez del for:
+#u<-modell6$residual
+#u
+#h<-lm.influence(modell6)$hat
+#h
+#alpha<-u/(1-h)
+
+#Se determinó que mayor a 1 o menor que -1, podrían ser leverages altos
+#Se calculará si el leverage es importante para las observaciones en este modelo
+alphass<-data.frame(alphass)
+leverage<-alphass[alphass$alphass>=1|alphass<=-1,]
+leverage<-data.frame(leverage)
+Porcentaje_leverage<-((nrow(leverage)/nrow(alphass)*100))
+xlabel_alpha<-1:nrow(test)
+xlabel_alpha<-data.frame(xlabel_alpha)
+alphass<-cbind(alphass, xlabel_alpha)
+view(Porcentaje_leverage)
+ggplot(data=alphass, aes(x =xlabel_alpha, y = alphass, group=1)) + 
+     geom_point()
+
+max(alphass)
+min(alphass)
 
 #1.5.2 K-Fold
 
-#1.5.3 LCOOV
+#Se utilizará la librería "caret"
+library(caret)
+
+#Para crear columna de 1 para hacer calcular el RMSE para la regresión con una
+#constante, de acuerdo con lo realizado en el punto anterior
+c_1 <- c()
+for (j in 1:nrow(DGEIH_AGE2)) {
+  c1 <- 1
+  c_1 <- c(c_1, c1)
+}
+
+DGEIH_AGE2<-cbind(DGEIH_AGE2,c_1)
+
+#Se realiza la validación de los modelos usando la validación cruzada K-fold, con k=5
+modelll1<-train(lningtot~c_1, 
+                          data=DGEIH_AGE2,
+                          trControl=trainControl(method="cv", number=5),
+                          method="null")
+RMSE_modelll1<-modelll1$resample
+RMSE_modellll1<-RMSE_modelll1$RMSE
+RMSE_modellll1<-mean(RMSE_modellll1) #Se obtiene finalmente la media del RMSE
+
+
+modelll2<-train(lningtot~age + Age2, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+RMSE_modelll2<-modelll2$resample
+RMSE_modellll2<-RMSE_modelll2$RMSE
+RMSE_modellll2<-mean(RMSE_modellll2) #Se obtiene finalmente la media del RMSE
+
+modelll3<-train(lningtot~sex_female, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+RMSE_modelll3<-modelll3$resample
+RMSE_modellll3<-RMSE_modelll3$RMSE
+RMSE_modellll3<-mean(RMSE_modellll3) #Se obtiene finalmente la media del RMSE
+
+modelll4<-train(lningtot~sex_female+Categor_oficio, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+
+RMSE_modelll4<-modelll4$resample
+RMSE_modellll4<-RMSE_modelll4$RMSE
+RMSE_modellll4<-mean(RMSE_modellll4) #Se obtiene finalmente la media del RMSE
+
+modelll5<-train(lningtot~sex_female+ocu, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+
+RMSE_modelll5<-modelll5$resample
+RMSE_modellll5<-RMSE_modelll5$RMSE
+RMSE_modellll5<-mean(RMSE_modellll5) #Se obtiene finalmente la media del RMSE
+
+modelll6<-train(lningtot~ ocu +age+exp+ sex_female*Age2, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+
+RMSE_modelll6<-modelll6$resample
+RMSE_modellll6<-RMSE_modelll6$RMSE
+RMSE_modellll6<-mean(RMSE_modellll6) #Se obtiene finalmente la media del RMSE
+
+
+modelll7<-train(lningtot~sex_female+ocu+exp+age+Age2, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+RMSE_modelll7<-modelll7$resample
+RMSE_modellll7<-RMSE_modelll7$RMSE
+RMSE_modellll7<-mean(RMSE_modellll7)
+
+modelll8<-train(lningtot~sex_female+ocu+exp+poly(age,3), 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+RMSE_modelll8<-modelll8$resample
+RMSE_modellll8<-RMSE_modelll8$RMSE
+RMSE_modellll8<-mean(RMSE_modellll8)
+
+modelll9<-train(lningtot~+sex_female+ocu+exp+poly(age,4), 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=5),
+                method="lm")
+RMSE_modelll9<-modelll9$resample
+RMSE_modellll9<-RMSE_modelll9$RMSE
+RMSE_modellll9<-mean(RMSE_modellll9)
+
+
+#Se conforma la base de datos con los resultados del RMSE
+RMSE_modelos<-c(RMSE_modellll1, RMSE_modellll2, RMSE_modellll3, RMSE_modellll4,RMSE_modellll5,RMSE_modellll6,RMSE_modellll7, RMSE_modellll8, RMSE_modellll9)
+x_label<-c('modelo1','modelo 2', 'modelo3', 'modelo 4', 'modelo5','modelo6','modelo7','modelo8', 'modelo9')
+RMSE_<-data.frame(x_label,RMSE_modelos)
+
+#Se grafica el resultado
+ggplot(data=RMSE_, aes(x = x_label, y = RMSE_modelos, group=1)) + 
+  geom_line()+   geom_point()
+
+RMSE_ordenado <- RMSE_[order(RMSE_$RMSE_modelos), ]
+view(RMSE_ordenado)
+
+
+#Se realiza la validación de los modelos usando la validación cruzada K-fold, con k=10
+modelll1_10<-train(lningtot~c_1, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="null")
+RMSE_modelll1_10<-modelll1_10$resample
+RMSE_modellll1_10<-RMSE_modelll1_10$RMSE
+RMSE_modellll1_10<-mean(RMSE_modellll1_10) #Se obtiene finalmente la media del RMSE
+
+
+modelll2_10<-train(lningtot~age + Age2, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+RMSE_modelll2_10<-modelll2_10$resample
+RMSE_modellll2_10<-RMSE_modelll2_10$RMSE
+RMSE_modellll2_10<-mean(RMSE_modellll2_10) #Se obtiene finalmente la media del RMSE
+
+modelll3_10<-train(lningtot~sex_female, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+RMSE_modelll3_10<-modelll3_10$resample
+RMSE_modellll3_10<-RMSE_modelll3_10$RMSE
+RMSE_modellll3_10<-mean(RMSE_modellll3_10) #Se obtiene finalmente la media del RMSE
+
+modelll4_10<-train(lningtot~sex_female+Categor_oficio, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+
+RMSE_modelll4_10<-modelll4_10$resample
+RMSE_modellll4_10<-RMSE_modelll4_10$RMSE
+RMSE_modellll4_10<-mean(RMSE_modellll4_10) #Se obtiene finalmente la media del RMSE
+
+modelll5_10<-train(lningtot~sex_female+ocu, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+
+RMSE_modelll5_10<-modelll5_10$resample
+RMSE_modellll5_10<-RMSE_modelll5_10$RMSE
+RMSE_modellll5_10<-mean(RMSE_modellll5_10) #Se obtiene finalmente la media del RMSE
+
+modelll6_10<-train(lningtot~ ocu +age+exp+ sex_female*Age2, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+
+RMSE_modelll6_10<-modelll6_10$resample
+RMSE_modellll6_10<-RMSE_modelll6_10$RMSE
+RMSE_modellll6_10<-mean(RMSE_modellll6_10) #Se obtiene finalmente la media del RMSE
+
+
+modelll7_10<-train(lningtot~sex_female+ocu+exp+age+Age2, 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+RMSE_modelll7_10<-modelll7_10$resample
+RMSE_modellll7_10<-RMSE_modelll7_10$RMSE
+RMSE_modellll7_10<-mean(RMSE_modellll7_10)
+
+modelll8_10<-train(lningtot~sex_female+ocu+exp+poly(age,3), 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+RMSE_modelll8_10<-modelll8_10$resample
+RMSE_modellll8_10<-RMSE_modelll8_10$RMSE
+RMSE_modellll8_10<-mean(RMSE_modellll8_10)
+
+modelll9_10<-train(lningtot~+sex_female+ocu+exp+poly(age,4), 
+                data=DGEIH_AGE2,
+                trControl=trainControl(method="cv", number=10),
+                method="lm")
+RMSE_modelll9_10<-modelll9_10$resample
+RMSE_modellll9_10<-RMSE_modelll9_10$RMSE
+RMSE_modellll9_10<-mean(RMSE_modellll9_10)
+
+
+#Se conforma la base de datos con los resultados del RMSE
+RMSE_modelos_10<-c(RMSE_modellll1_10, RMSE_modellll2_10, RMSE_modellll3_10, RMSE_modellll4_10,RMSE_modellll5_10,RMSE_modellll6_10,RMSE_modellll7_10, RMSE_modellll8_10, RMSE_modellll9_10)
+x_label<-c('modelo1','modelo 2', 'modelo3', 'modelo 4', 'modelo5','modelo6','modelo7','modelo8', 'modelo9')
+RMSE_10<-data.frame(x_label,RMSE_modelos_10)
+
+#Se grafica el resultado
+ggplot(data=RMSE_10, aes(x = x_label, y = RMSE_modelos_10, group=1)) + 
+  geom_line()+   geom_point()
+
+RMSE_ordenado_10 <- RMSE_10[order(RMSE_10$RMSE_modelos_10), ]
+view(RMSE_ordenado_10)
+
+
+
+
+#1.5.3 LOOCV
+
+#Se realizará el LOOCV para el modelo 4, utilizando la función de la librería caret y modificando los datos para su implementación
+#El correr esta función demoró 40 minutos.
+modelll20<-train(lningtot~sex_female+Categor_oficio, 
+                 data=DGEIH_AGE2,
+                 trControl=trainControl(method="LOOCV", number=nrow(DGEIH_AGE2)),
+                 method="lm")
+RMSE_modelll20<-modelll20$results
+RMSE_modellll20<-RMSE_modelll20$RMSE
+RMSE_modellll20<-mean(RMSE_modellll20)
+modelll20
+view(RMSE_modellll20)
+
+library(boot)
+
+cv.error <- rep(0, nrow(DGEIH_AGE2))
+ for (i in 1:nrow(DGEIH_AGE2)) {
+   glm.fit <- glm(lningtot~sex_female+Categor_oficio, data = DGEIH_AGE2)
+   cv.error[i] <- cv.glm(DGEIH_AGE2 , glm.fit)$delta [1]
+   }
+
+#Se calcula el leverage de los datos con respecto al modelo 4
+#El código demora aproximadamente 20 minutos en correr
+alphas_m4<-c()
+modelo4_alpha<-lm(lningtot~ ocu+age+exp+ sex_female*Age2, data = DGEIH_AGE2)
+for (j in 1:nrow(DGEIH_AGE2)) {
+  uj4 <- modelo4_alpha$residual[j]
+  hj4 <- lm.influence(modelo4_alpha)$hat[j]
+  alpham4 <- uj4/(1-hj4)
+  alphas_m4 <- c(alphas_m4, alpham4)
+}
+#Hasta aquí demora los 20 minutos
+alphas_m4<-data.frame(alphas_m4)
+leverage_m4<-alphas_m4[alphas_m4$alphas_m4>=1|alphas_m4<=-1,]
+leverage_m4<-data.frame(leverage_m4)
+Porcentaje_leverage_m4<-((nrow(leverage_m4)/nrow(alphas_m4)*100))
+xlabel_alpha_m4<-1:nrow(DGEIH_AGE2)
+xlabel_alpha_m4<-data.frame(xlabel_alpha_m4)
+max(alphas_m4$alphas_m4)
+min(alphas_m4$alphas_m4)
+
+alphas_m4<-cbind(alphas_m4, xlabel_alpha_m4)
+view(Porcentaje_leverage_m4)
+ggplot(data=alphas_m4, aes(x =xlabel_alpha_m4, y = alphas_m4, group=1)) + 
+  geom_point()
+
+
 
 
