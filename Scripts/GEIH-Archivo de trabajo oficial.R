@@ -772,14 +772,6 @@ RMSE_modellll20<-mean(RMSE_modellll20)
 modelll20
 view(RMSE_modellll20)
 
-library(boot)
-
-cv.error <- rep(0, nrow(DGEIH_AGE2))
- for (i in 1:nrow(DGEIH_AGE2)) {
-   glm.fit <- glm(lningtot~sex_female+Categor_oficio, data = DGEIH_AGE2)
-   cv.error[i] <- cv.glm(DGEIH_AGE2 , glm.fit)$delta [1]
-   }
-
 #Se calcula el leverage de los datos con respecto al modelo 4
 #El código demora aproximadamente 20 minutos en correr
 alphas_m4<-c()
