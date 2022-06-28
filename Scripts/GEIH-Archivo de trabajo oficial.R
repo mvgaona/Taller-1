@@ -69,8 +69,8 @@ Base10<- data.frame(Base10)
 #Con la fusión de todas las bases de datos, tendremos oficialmente los Datos completos de la GEIH de 2018
 DatosGEIH<- rbind(Base1, Base2, Base3, Base4, Base5, Base6, Base7, Base8, Base9, Base10)
 
-DatosGEIH<-readRDS("Datos_GEIH.Rds")
-#saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de
+#DatosGEIH<-readRDS("Datos_GEIH.Rds") #Para cargar la base, en caso que no se tenga tiempo para cargar desde la página web-Solo se debe poner la base de datos en la ubicación de la sesión y carga esta tabla
+#saveRDS(DatosGEIH, file = "Datos_GEIH.rds") #Crea el archivo RDS en el directorio de trabajo, en caso de necesitarse.
 
 #####Punto 1.1.2
 DatosGEIH_18<-DatosGEIH[DatosGEIH$age>=18,] #Se realizará el análisis para individuos 
@@ -552,8 +552,8 @@ view(Porcentaje_leverage)
 ggplot(data=alphass, aes(x =xlabel_alpha, y = alphass, group=1)) + 
      geom_point()
 
-max(alphass)
-min(alphass)
+max(alphass$alphass)
+min(alphass$alphass)
 
 #1.5.2 K-Fold
 
